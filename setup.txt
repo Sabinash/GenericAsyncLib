@@ -1,0 +1,93 @@
+package com.sekhartech.genericasynctaskLib;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.Toast;
+public class MainActivity extends Activity implements AsyncTaskCompleteListener{
+	private CustomAsyncTask mAsyncTask;
+	private ProgressDialog pDialog;
+	public static final int progress_bar_type = 0;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.fragment_main);
+		Button btn = (Button) findViewById(R.id.button1);
+		btn.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+			String urlPOST = "http://192.168.10.100:8080/api/login";
+			String urlGET = "http://jsonplaceholder.typicode.com/comments?postId=1";
+			String urlDOWNLOAD = "http://api.androidhive.info/progressdialog/hive.jpg";
+			String urlUPLOAD = "http://192.168.56.1:8080/api/uploadImager";
+			String pathToSaveFile = "/sdcard/test.jpg";
+						
+			Login mLogin = new Login();
+			mLogin.setUserName("abinash");
+			mLogin.setPassWord("abc123");
+				
+			String jsonObject = ServiceCall.createRequest(mLogin);
+							
+			mAsyncTask = new CustomAsyncTask(MainActivity.this,urlGET, "GET");
+	        mAsyncTask = new CustomAsyncTask(MainActivity.this,urlPOST, "POST" ,jsonObject);
+	        mAsyncTask = new CustomAsyncTask(MainActivity.this,urlDOWNLOAD,pathToSaveFile,"DOWNLOAD");	
+		//	mAsyncTask = new CustomAsyncTask(MainActivity.this, urlUPLOAD,uploadedFilePath,"UPLOAD");
+		 	mAsyncTask.execute();
+			//	Intent mIntent = new Intent(MainActivity.this,SecondActivit.class);
+			//	startActivityForResult(mIntent, 0);
+			progressDialog(progress_bar_type);	
+			}
+		});
+
+	}
+	
+	private void progressDialog(int progress_bar_type){
+		
+		switch (progress_bar_type) {
+		case 0:
+			pDialog = new ProgressDialog(this);
+			pDialog.setMessage("Please wait...");
+			pDialog.setCancelable(false);
+			pDialog.show();
+			break;
+        case 1:
+        	pDialog = new ProgressDialog(this);
+    		pDialog.setMessage("Downloading file. Please wait...");
+    		pDialog.setIndeterminate(false);
+    		pDialog.setMax(100);
+    		pDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+    		pDialog.setCancelable(true);
+    		pDialog.show();
+			break;
+        case 2:
+        	pDialog = new ProgressDialog(this);
+    		pDialog.setMessage("Uploading file. Please wait...");
+    		pDialog.setIndeterminate(false);
+    		pDialog.setMax(100);
+    		pDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+    		pDialog.setCancelable(true);
+    		pDialog.show();
+			break;		
+
+		default:
+			break;
+		}	
+	}
+
+	@Override
+	public void onTaskComplete(String result) {
+		Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();
+		pDialog.dismiss();
+		ServiceCall.getResponse(result, Login.class);
+	}
+
+	@Override
+	public void onProgressUpdate(Integer progress) {
+		pDialog.setProgress(progress);
+	}
+}
